@@ -28,8 +28,8 @@ path = join(str(Path()), data_path)
 version_txt = join(path, 'version.txt')
 version = config.version
 
-if exists(config):
-    with open(config, encoding='utf-8') as fp:
+if exists(version_txt):
+    with open(version_txt, encoding='utf-8') as fp:
         version = fp.read().strip()
 
 
@@ -173,7 +173,7 @@ class pcrclient:
 
                 defaultHeaders['APP-VER'] = version
                 self.headers['APP-VER'] = version
-                with open(config, "w", encoding='utf-8') as fp:
+                with open(version_txt, "w", encoding='utf-8') as fp:
                     print(version, file=fp)
 
             # print(f"data_headers\ntype={type(data_headers)}\n{data_headers}")
@@ -199,14 +199,14 @@ class pcrclient:
                 debug_info = {"apiurl": apiurl, "request": request, "headers": data_headers}
                 # print(debug_info)
                 debug_info["data"] = data
-                try:
-                    with open(curpath, "w", encoding="utf-8") as fp:
+                # try:
+                    # with open(curpath, "w", encoding="utf-8") as fp:
                         # json.dump(debug_info, fp, ensure_ascii=False)
                         # debug_info_json = json.dumps(debug_info, ensure_ascii=False)
                         # print(debug_info_json, file=fp)
-                        print(str(debug_info).replace("'", '"'), file=fp)
-                except:
-                    pass
+                        # print(str(debug_info).replace("'", '"'), file=fp)
+                # except:
+                #     pass
             if not noerr and 'server_error' in data:
                 data = data['server_error']
                 print(f'pcrclient: {apiurl} api failed {data}')
