@@ -6,8 +6,7 @@ class Config(BaseModel, extra=Extra.ignore):
     apscheduler_log_level: int = 30
     data_path: str = "data\\pcrjjc"
     superusers: list[str]
-    version: str
-    port: int
+    version: str = "6.2.0"
     max_pri: int = 0  # 最大私聊人数
     max_pcrid: int = 8  # 每个QQ号绑定的最多数量
     max_history: int = 50  # 每个QQ号保存的最多击剑记录
