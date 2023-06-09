@@ -32,7 +32,6 @@ if exists(version_txt):
     with open(version_txt, encoding='utf-8') as fp:
         version = fp.read().strip()
 
-
 defaultHeaders = {
     'Accept-Encoding': 'gzip',
     'User-Agent': 'Dalvik/2.1.0 (Linux, U, Android 5.1.1, PCRT00 Build/LMY48Z)',
@@ -63,7 +62,7 @@ class ApiException(Exception):
         self.code = code
 
 
-class bsdkclient:
+class BSdkClient:
     '''
         acccountinfo = {
             'account': '',
@@ -73,16 +72,16 @@ class bsdkclient:
         }
     '''
 
-    def __init__(self, acccountinfo, captchaVerifier):
-        self.account = acccountinfo['account']
-        self.pwd = acccountinfo['password']
-        self.platform = acccountinfo['platform']
-        self.channel = acccountinfo['channel']
-        self.captchaVerifier = captchaVerifier
+    def __init__(self, account_info, captcha_verifier):
+        self.account = account_info['account']
+        self.pwd = account_info['password']
+        self.platform = account_info['platform']
+        self.channel = account_info['channel']
+        self.captcha_verifier = captcha_verifier
 
     async def login(self):
         while True:
-            resp = await login(self.account, self.pwd, self.captchaVerifier)
+            resp = await login(self.account, self.pwd, self.captcha_verifier)
             if resp['code'] == 0:
                 logger.info("geetest or captcha succeed")
                 break
@@ -93,11 +92,11 @@ class bsdkclient:
         return resp['uid'], resp['access_key']
 
 
-class pcrclient:
+class PcrClient:
 
-    def __init__(self, bsclient: bsdkclient):
+    def __init__(self, bs_client: BSdkClient):
         self.viewer_id = 0
-        self.bsdk = bsclient
+        self.b_sdk = bs_client
 
         self.headers = {}
         for key in defaultHeaders.keys():
@@ -106,17 +105,17 @@ class pcrclient:
         self.shouldLogin = True
         self.shouldLoginB = True
 
-    async def bililogin(self):
-        self.uid, self.access_key = await self.bsdk.login()
-        self.platform = self.bsdk.platform
-        self.channel = self.bsdk.channel
+    async def bili_login(self):
+        self.uid, self.access_key = await self.b_sdk.login()
+        self.platform = self.b_sdk.platform
+        self.channel = self.b_sdk.channel
         self.headers['PLATFORM'] = str(self.platform)
         self.headers['PLATFORM-ID'] = str(self.platform)
         self.headers['CHANNEL-ID'] = str(self.channel)
         self.shouldLoginB = False
 
     @staticmethod
-    def createkey() -> bytes:
+    def create_key() -> bytes:
         return bytes([ord('0123456789abcdef'[randint(0, 15)]) for _ in range(32)])
 
     @staticmethod
@@ -128,12 +127,12 @@ class pcrclient:
     @staticmethod
     def pack(data: object, key: bytes) -> bytes:
         aes = AES.new(key, AES.MODE_CBC, b'ha4nBYA2APUD6Uv1')
-        return aes.encrypt(pcrclient.add_to_16(packb(data, use_bin_type=False))) + key
+        return aes.encrypt(PcrClient.add_to_16(packb(data, use_bin_type=False))) + key
 
     @staticmethod
     def encrypt(data: str, key: bytes) -> bytes:
         aes = AES.new(key, AES.MODE_CBC, b'ha4nBYA2APUD6Uv1')
-        return aes.encrypt(pcrclient.add_to_16(data.encode('utf8'))) + key
+        return aes.encrypt(PcrClient.add_to_16(data.encode('utf8'))) + key
 
     @staticmethod
     def decrypt(data: bytes):
@@ -148,24 +147,24 @@ class pcrclient:
         dec = aes.decrypt(data[:-32])
         return unpackb(dec[:-dec[-1]], strict_map_key=False), data[-32:]
 
-    async def callapi(self, apiurl: str, request: dict, crypted: bool = True, noerr: bool = True):
-        # 按apiurl创建json文件 保存apiurl request data_headers data
-        key = pcrclient.createkey()
+    async def callapi(self, api_url: str, request: dict, crypte: bool = True, noerr: bool = True):
+        # 按api_url创建json文件 保存api_url request data_headers data
+        key = PcrClient.create_key()
 
         try:
             if self.viewer_id is not None:
-                request['viewer_id'] = b64encode(pcrclient.encrypt(
-                    str(self.viewer_id), key)) if crypted else str(self.viewer_id)
+                request['viewer_id'] = b64encode(PcrClient.encrypt(
+                    str(self.viewer_id), key)) if crypte else str(self.viewer_id)
 
-            response = await (await post(api_root + apiurl,
-                                         data=pcrclient.pack(request, key) if crypted else str(request).encode('utf8'),
+            response = await (await post(api_root + api_url,
+                                         data=PcrClient.pack(request, key) if crypte else str(request).encode('utf8'),
                                          headers=self.headers, timeout=10)).content
 
-            response = pcrclient.unpack(
-                response)[0] if crypted else loads(response)
+            response = PcrClient.unpack(
+                response)[0] if crypte else loads(response)
 
             data_headers = response['data_headers']
-            if "/check/game_start" == apiurl and "store_url" in data_headers:
+            if "/check/game_start" == api_url and "store_url" in data_headers:
                 global version
                 import re
                 pattern = re.compile(r"\d\.\d\.\d")
@@ -191,25 +190,25 @@ class pcrclient:
 
             data = response['data']
 
-            if debugging:
-                curpath = dirname(__file__)
-                curpath = join(
-                    curpath, f"debug/{apiurl.replace('/', '-')}.json")
-                # print(curpath)
-                debug_info = {"apiurl": apiurl, "request": request, "headers": data_headers}
-                # print(debug_info)
-                debug_info["data"] = data
-                # try:
-                    # with open(curpath, "w", encoding="utf-8") as fp:
-                        # json.dump(debug_info, fp, ensure_ascii=False)
-                        # debug_info_json = json.dumps(debug_info, ensure_ascii=False)
-                        # print(debug_info_json, file=fp)
-                        # print(str(debug_info).replace("'", '"'), file=fp)
-                # except:
-                #     pass
+            # if debugging:
+            #     curpath = dirname(__file__)
+            #     curpath = join(
+            #         curpath, f"debug/{api_url.replace('/', '-')}.json")
+            #     print(curpath)
+            #     debug_info = {"apiurl": api_url, "request": request, "headers": data_headers}
+            #     print(debug_info)
+            #     debug_info["data"] = data
+            #     try:
+            #     with open(curpath, "w", encoding="utf-8") as fp:
+            #     json.dump(debug_info, fp, ensure_ascii=False)
+            #     debug_info_json = json.dumps(debug_info, ensure_ascii=False)
+            #     print(debug_info_json, file=fp)
+            #     print(str(debug_info).replace("'", '"'), file=fp)
+            #     except:
+            #         pass
             if not noerr and 'server_error' in data:
                 data = data['server_error']
-                print(f'pcrclient: {apiurl} api failed {data}')
+                logger.info('pcrclient: {} api failed {}', api_url, data)
                 raise ApiException(data['message'], data['status'])
 
             # print(f'pcrclient: {apiurl} api called')
@@ -220,7 +219,7 @@ class pcrclient:
 
     async def login(self):
         if self.shouldLoginB:
-            await self.bililogin()
+            await self.bili_login()
 
         if 'REQUEST-ID' in self.headers:
             self.headers.pop('REQUEST-ID')
@@ -234,20 +233,20 @@ class pcrclient:
                 match = search('\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d',
                                manifest['maintenance_message']).group()
                 end = parse(match)
-                print(f'server is in maintenance until {match}')
+                logger.info('server is in maintenance until {}', match)
                 while datetime.now() < end:
                     await sleep(1)
             except:
-                print(f'server is in maintenance. waiting for 60 secs')
+                logger.info('server is in maintenance. waiting for 60 secs')
                 await sleep(60)
 
         ver = manifest['required_manifest_ver']
-        print(f'using manifest ver = {ver}')
+        logger.info('using manifest ver = {}', ver)
         self.headers['MANIFEST-VER'] = str(ver)
-        lres = await self.callapi('/tool/sdk_login',
-                                  {'uid': str(self.uid), 'access_key': self.access_key, 'channel': str(self.channel),
-                                   'platform': str(self.platform)})
-        if 'is_risk' in lres and lres['is_risk'] == 1:
+        l_res = await self.callapi('/tool/sdk_login',
+                                   {'uid': str(self.uid), 'access_key': self.access_key, 'channel': str(self.channel),
+                                    'platform': str(self.platform)})
+        if 'is_risk' in l_res and l_res['is_risk'] == 1:
             self.shouldLoginB = True
             return
 

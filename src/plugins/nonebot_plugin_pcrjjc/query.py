@@ -13,7 +13,7 @@ from nonebot.permission import SUPERUSER
 
 from .aiorequests import get
 from .config import Config
-from .pcrclient import pcrclient, ApiException, bsdkclient
+from .pcrclient import PcrClient, ApiException, BSdkClient
 
 driver = get_driver()
 config = Config.parse_obj(driver.config)
@@ -55,8 +55,8 @@ async def _(b: Bot):
     bot = b
     await load_config()
     for i in ac_info:
-        b_client = bsdkclient(i, captcha_verifier)
-        pcr_client = pcrclient(b_client)
+        b_client = BSdkClient(i, captcha_verifier)
+        pcr_client = PcrClient(b_client)
         loop = asyncio.get_event_loop()
         loop.create_task(query(pcr_client))
         if binds_info == {} or binds_info["arena_bind"] == {}:
@@ -137,11 +137,11 @@ async def captcha_verifier(*args):
     while captcha_cnt < 5:
         captcha_cnt += 1
         try:
-            print(f'测试新版自动过码中，当前尝试第{captcha_cnt}次。')
+            logger.info('测试新版自动过码中，当前尝试第{}次。',captcha_cnt)
 
             await asyncio.sleep(1)
             uuid = loads(await (await get(url="https://pcrd.tencentbot.top/geetest")).content)["uuid"]
-            print(f'uuid={uuid}')
+            logger.info('uuid={}',uuid)
 
             ccnt = 0
             while ccnt < 3:
@@ -151,9 +151,9 @@ async def captcha_verifier(*args):
                 res = loads(res)
                 if "queue_num" in res:
                     nu = res["queue_num"]
-                    print(f"queue_num={nu}")
+                    logger.info("queue_num={}", nu)
                     tim = min(int(nu), 3) * 5
-                    print(f"sleep={tim}")
+                    logger.info("sleep={}", tim)
                     await asyncio.sleep(tim)
                 else:
                     info = res["info"]
@@ -162,7 +162,7 @@ async def captcha_verifier(*args):
                     elif info == "in running":
                         await asyncio.sleep(5)
                     else:
-                        print(f'info={info}')
+                        logger.info('info={}', info)
                         validating = False
                         return info
         except:
@@ -206,8 +206,8 @@ async def query(pcr_client):
         except:
             traceback.print_exc()
         finally:
-            # TODO 解决退出时的报错问题
-            queue.task_done()
+            if queue is not None:
+                queue.task_done()
 
 
 @on_regex(pattern=rf'validate{ordd} ?(\S+)', permission=SUPERUSER).handle()

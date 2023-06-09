@@ -3,7 +3,7 @@ from pydantic import BaseModel, Extra
 
 class Config(BaseModel, extra=Extra.ignore):
     """Plugin Config Here"""
-    apscheduler_log_level: int = 40
+    apscheduler_log_level: int = 30
     data_path: str = "data\\pcrjjc"
     superusers: list[str]
     version: str

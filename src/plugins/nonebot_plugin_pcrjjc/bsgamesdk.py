@@ -3,19 +3,22 @@ import json
 import time
 import urllib
 
+from nonebot import logger
+
 from . import rsacr
 from .aiorequests import post
 
-bililogin = "https://line1-sdk-center-login-sh.biligame.net/"
+bili_login = "https://line1-sdk-center-login-sh.biligame.net/"
 
 
-async def sendpost(url, data):
-    header = {"User-Agent": "Mozilla/5.0 BSGameSDK", "Content-Type": "application/x-www-form-urlencoded", "Host": "line1-sdk-center-login-sh.biligame.net"}
+async def send_post(url, data):
+    header = {"User-Agent": "Mozilla/5.0 BSGameSDK", "Content-Type": "application/x-www-form-urlencoded",
+              "Host": "line1-sdk-center-login-sh.biligame.net"}
     res = await (await post(url=url, data=data, headers=header)).content
     return json.loads(res)
 
 
-def setsign(data):
+def set_sign(data):
     data["timestamp"] = int(time.time())
     data["client_timestamp"] = int(time.time())
     sign = ""
@@ -41,8 +44,8 @@ modolcaptch = '{"operators":"5","merchant_id":"1","isRoot":"0","domain_switch_co
 
 async def login1(account, password):
     data = json.loads(modolrsa)
-    data = setsign(data)
-    rsa = await sendpost(bililogin + "api/client/rsa", data)
+    data = set_sign(data)
+    rsa = await send_post(bili_login + "api/client/rsa", data)
     data = json.loads(modollogin)
     public_key = rsa['rsa_key']
     data["access_key"] = ""
@@ -51,15 +54,15 @@ async def login1(account, password):
     data["challenge"] = ""
     data["user_id"] = account
     data["validate"] = ""
-    data["pwd"] = rsacr.rsacreate(rsa['hash'] + password, public_key)
-    data = setsign(data)
-    return await sendpost(bililogin + "api/client/login", data)
+    data["pwd"] = rsacr.rsa_create(rsa['hash'] + password, public_key)
+    data = set_sign(data)
+    return await send_post(bili_login + "api/client/login", data)
 
 
 async def login2(account, password, challenge, gt_user, validate):
     data = json.loads(modolrsa)
-    data = setsign(data)
-    rsa = await sendpost(bililogin + "api/client/rsa", data)
+    data = set_sign(data)
+    rsa = await send_post(bili_login + "api/client/rsa", data)
     data = json.loads(modollogin)
     public_key = rsa['rsa_key']
     data["access_key"] = ""
@@ -69,40 +72,40 @@ async def login2(account, password, challenge, gt_user, validate):
     data["user_id"] = account
     data["validate"] = validate
     data["seccode"] = validate + "|jordan"
-    data["pwd"] = rsacr.rsacreate(rsa['hash'] + password, public_key)
-    data = setsign(data)
-    return await sendpost(bililogin + "api/client/login", data)
+    data["pwd"] = rsacr.rsa_create(rsa['hash'] + password, public_key)
+    data = set_sign(data)
+    return await send_post(bili_login + "api/client/login", data)
 
 
-async def captch():
+async def captcha():
     data = json.loads(modolcaptch)
-    data = setsign(data)
-    return await sendpost(bililogin + "api/client/start_captcha", data)
+    data = set_sign(data)
+    return await send_post(bili_login + "api/client/start_captcha", data)
 
 
-async def login(bili_account, bili_pwd, make_captch):
-    print(f'logging in with acc={bili_account}, pwd = {bili_pwd}')
+async def login(bili_account, bili_pwd, captcha_verifier):
+    logger.info('logging in with acc = {}, pwd = {}', bili_account, bili_pwd)
     login_sta = await login1(bili_account, bili_pwd)
     if "access_key" in login_sta:
         return login_sta
 
     otto = False
     try:
-        otto = await make_captch()
+        otto = await captcha_verifier()
     except:  # 兼容原版手动过码
         pass
     if otto:
-        cap = await make_captch(True, True)
+        cap = await captcha_verifier(True, True)
         if cap == "manual":
             otto = False
         else:
             login_sta = await login2(bili_account, bili_pwd, cap["challenge"], cap['gt_user_id'], cap['validate'])
             if "access_key" in login_sta:
-                await make_captch(0)
+                await captcha_verifier(0)
             return login_sta
 
     if not otto:
-        cap = await captch()
-        captch_done = await make_captch(cap['gt'], cap['challenge'], cap['gt_user_id'])
-        login_sta = await login2(bili_account, bili_pwd, cap["challenge"], cap['gt_user_id'], captch_done)
+        cap = await captcha()
+        captcha_done = await captcha_verifier(cap['gt'], cap['challenge'], cap['gt_user_id'])
+        login_sta = await login2(bili_account, bili_pwd, cap["challenge"], cap['gt_user_id'], captcha_done)
         return login_sta
