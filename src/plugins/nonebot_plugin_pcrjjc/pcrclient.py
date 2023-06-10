@@ -175,7 +175,7 @@ class PcrClient:
                 with open(version_txt, "w", encoding='utf-8') as fp:
                     print(version, file=fp)
 
-            # print(f"data_headers\ntype={type(data_headers)}\n{data_headers}")
+            # logger.debug("data_headers\ntype={}\n{}", type(data_headers), data_headers)
 
             if 'sid' in data_headers and data_headers["sid"] != '':
                 t = md5()
@@ -190,28 +190,12 @@ class PcrClient:
 
             data = response['data']
 
-            # if debugging:
-            #     curpath = dirname(__file__)
-            #     curpath = join(
-            #         curpath, f"debug/{api_url.replace('/', '-')}.json")
-            #     print(curpath)
-            #     debug_info = {"apiurl": api_url, "request": request, "headers": data_headers}
-            #     print(debug_info)
-            #     debug_info["data"] = data
-            #     try:
-            #     with open(curpath, "w", encoding="utf-8") as fp:
-            #     json.dump(debug_info, fp, ensure_ascii=False)
-            #     debug_info_json = json.dumps(debug_info, ensure_ascii=False)
-            #     print(debug_info_json, file=fp)
-            #     print(str(debug_info).replace("'", '"'), file=fp)
-            #     except:
-            #         pass
             if not noerr and 'server_error' in data:
                 data = data['server_error']
                 logger.info('pcrclient: {} api failed {}', api_url, data)
                 raise ApiException(data['message'], data['status'])
 
-            # print(f'pcrclient: {apiurl} api called')
+            # logger.debug('pcrclient: {} api called', api_url)
             return data
         except:
             self.shouldLogin = True

@@ -5,11 +5,34 @@
 * 基于[pcrjjc_huannai](https://github.com/SonderXiaoming/pcrjjc_huannai)的代码基础上进行重构
 * 可独立作为nonebot2插件使用，不依赖于HoshinoBot
 
+
+
+### 安装和更新
+
+##### 使用nb-cli安装与更新
+在 nonebot2 项目的根目录下打开命令行，执行
+```shell
+nb plugin install nonebot-plugin-pcrjjc --upgrade
+```
+##### 使用pip安装和更新
+在 nonebot2 项目的根目录下打开命令行，进入nonebot2项目虚拟环境，执行
+```shell
+pip install --upgrade nonebot-plugin-pcrjjc
+```
+并在项目根目录下的`pyproject.toml`文件, 在`[tool.nonebot]`部分追加写入
+```toml
+plugins = ["nonebot_plugin_pcrjjc"]
+```
+
+
+
 ### 具体指令如下
 
 ![竞技场帮助指令](./img/help.png)
 
-### 配置
+
+
+### 配置项
 
 **在nonebot2项目中的`.env`开头的文件添加下表配置项，其中非必填项可不填**
 
