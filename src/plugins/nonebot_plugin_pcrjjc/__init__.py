@@ -89,7 +89,8 @@ sv_help_adm = '''------------------------------------------------
 # JJCH = JJCHistoryStorage()
 friend_list = []
 pcrid_list = []
-admin = int(config.superusers[0])
+if len(config.superusers) > 0:
+    admin = int(config.superusers[0])
 config = join(path, 'binds.json')
 root = {'arena_bind': {}}
 if exists(config):

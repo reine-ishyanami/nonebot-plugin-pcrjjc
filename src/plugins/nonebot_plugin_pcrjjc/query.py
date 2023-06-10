@@ -28,7 +28,8 @@ validating = False
 ac_first = False
 client = None
 captcha_cnt = 0
-admin = int(config.superusers[0])
+if len(config.superusers) > 0:
+    admin = int(config.superusers[0])
 data_path = config.data_path
 path = join(str(Path()), data_path)
 ac_info = []
