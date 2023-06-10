@@ -4,7 +4,16 @@ from copy import deepcopy
 from json import load, dump
 from os.path import join, exists
 
-from nonebot import get_bot, get_driver, on_fullmatch, get_bots, logger, on_regex, require, on_notice
+from nonebot import (
+    get_bot,
+    get_driver,
+    on_fullmatch,
+    get_bots,
+    logger,
+    on_regex,
+    require,
+    on_notice
+)
 from nonebot.adapters.onebot.v11 import (
     Bot,
     MessageEvent,

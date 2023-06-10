@@ -21,7 +21,7 @@ config = Config.parse_obj(driver.config)
 bot: Bot | None = None
 captcha_lck = Lock()
 queue = asyncio.PriorityQueue()
-otto = False
+otto = config.otto
 ordd = 'x'
 validate = None
 validating = False
@@ -100,6 +100,22 @@ async def _():
     queue = None
 
 
+@on_regex(pattern=rf'^validate{ordd} ?(\S+)$', permission=SUPERUSER).handle()
+async def validate(group: tuple = RegexGroup()):
+    global validate, captcha_lck, otto
+    validate = group[0]
+    if validate == "manual":
+        otto = False
+        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to manual')
+    elif validate == "auto":
+        otto = True
+        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to auto')
+    try:
+        captcha_lck.release()
+    except:
+        pass
+
+
 async def captcha_verifier(*args):
     global otto
     if len(args) == 0:
@@ -137,11 +153,11 @@ async def captcha_verifier(*args):
     while captcha_cnt < 5:
         captcha_cnt += 1
         try:
-            logger.info('测试新版自动过码中，当前尝试第{}次。',captcha_cnt)
+            logger.info('测试新版自动过码中，当前尝试第{}次。', captcha_cnt)
 
             await asyncio.sleep(1)
             uuid = loads(await (await get(url="https://pcrd.tencentbot.top/geetest")).content)["uuid"]
-            logger.info('uuid={}',uuid)
+            logger.info('uuid={}', uuid)
 
             ccnt = 0
             while ccnt < 3:
@@ -208,19 +224,3 @@ async def query(pcr_client):
         finally:
             if queue is not None:
                 queue.task_done()
-
-
-@on_regex(pattern=rf'validate{ordd} ?(\S+)', permission=SUPERUSER).handle()
-async def validate(group: tuple = RegexGroup()):
-    global binds, lck, validate, validating, captcha_lck, otto
-    validate = group[0]
-    if validate == "manual":
-        otto = False
-        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to manual')
-    elif validate == "auto":
-        otto = True
-        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to auto')
-    try:
-        captcha_lck.release()
-    except:
-        pass
