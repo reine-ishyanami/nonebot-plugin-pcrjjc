@@ -1,10 +1,12 @@
+from os.path import join
+
 from pydantic import BaseModel, Extra
 
 
 class Config(BaseModel, extra=Extra.ignore):
     """Plugin Config Here"""
     apscheduler_log_level: int = 30
-    data_path: str = "data\\pcrjjc"  # 数据存储目录
+    data_path: str = join("data", "pcrjjc")  # 数据存储目录
     superusers: list[str]  # 超级用户列表，建议只填一个，填多个可能导致后续用户指令失效
     otto: bool = False  # 是否自动过验证码，因自动过码失效，改为手动过码
     version: str = "6.2.0"  # 游戏版本号

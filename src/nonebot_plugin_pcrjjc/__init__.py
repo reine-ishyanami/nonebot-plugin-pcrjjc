@@ -27,6 +27,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.internal.matcher import Matcher
 from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
+from nonebot.plugin import PluginMetadata
 
 from .config import Config
 from .pcrclient import ApiException
@@ -36,6 +37,16 @@ from .text2img import image_draw
 require("nonebot_plugin_apscheduler")
 
 from nonebot_plugin_apscheduler import scheduler
+
+__plugin_meta__ = PluginMetadata(
+    name="pcrjjc",
+    description="公主连结（国服）排名监测工具",
+    usage="发送 竞技场帮助 获取详细使用说明",
+    type="application",
+    homepage="https://github.com/reine-ishyanami/nonebot-plugin-pcrjjc",
+    supported_adapters={"~onebot.v11"}
+)
+
 
 driver = get_driver()
 config = Config.parse_obj(driver.config)
@@ -89,8 +100,7 @@ sv_help_adm = '''------------------------------------------------
 # JJCH = JJCHistoryStorage()
 friend_list = []
 pcrid_list = []
-if len(config.superusers) > 0:
-    admin = int(config.superusers[0])
+admin = int(config.superusers[0]) if len(config.superusers) > 0 else 0
 config = join(path, 'binds.json')
 root = {'arena_bind': {}}
 if exists(config):
