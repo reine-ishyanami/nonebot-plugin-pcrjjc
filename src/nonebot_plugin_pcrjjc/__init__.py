@@ -163,7 +163,7 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
         else:
             manual_query_list = [pcrid]  # 手动查询的列表
             manual_query_list_name = [None]
-    except:
+    except TypeError:  # 只捕获强转异常
         if qid in bind_cache:
             manual_query_list = bind_cache[qid]["pcrid"]
             manual_query_list_name = bind_cache[qid]["pcrName"]
@@ -240,7 +240,7 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple =
     pcrid_num = len(bind_cache[qid]['pcrid'])
     try:
         pcrid_id_input = int(group[0])
-    except:
+    except TypeError:
         if pcrid_num == 1:
             pcrid_id_input = 1
         else:
@@ -340,7 +340,7 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple =
             else:
                 await matcher.finish('昵称不能超过12个字，换个短一点的昵称吧~')
                 return
-        except:
+        except TypeError:
             nickname = ''
     await queue.put((4, (
         member_add_sub, pcrid,
@@ -393,7 +393,7 @@ async def _(event: GroupMessageEvent, matcher: Matcher):
 
 
 # ========================================竞技场设置========================================
-@on_regex(pattern=r'^竞技场修改昵称 ?(\d+)? (\S+)$').handle()
+@on_regex(pattern=r'^竞技场修改昵称 ?(\d+)? ?(\S+)$').handle()
 async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGroup()):
     global bind_cache, lck
     qid = str(event.user_id)
@@ -403,7 +403,7 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
         return
     try:
         pcrid_id = int(group[0])
-    except:
+    except TypeError:
         pcrid_id = None
     if len(group[1]) <= 12:
         name = group[1]
@@ -755,9 +755,9 @@ async def jjc_query(data):
                         await bot.send_group_msg(self_id=sid, group_id=int(ev.group_id),
                                                  message=MessageSegment.image(pic))
                         break
-                    except Exception as e:
+                    except Exception:
                         pass
-    except:
+    except KeyError:
         await bot.send_group_msg(group_id=int(ev.group_id), message=f'找不到这个uid，大概率是你输错了！')
 
 
@@ -817,13 +817,13 @@ async def member_add_sub(data):
                     bind_cache[qid]["notice_on"] = True
                     reply += '已为您开启群聊推送！'
             save_binds()
-    except:
+    except KeyError:
         reply = f'找不到这个uid，大概率是你输错了！'
     for sid in get_bots():
         try:
             await bot.send_group_msg(self_id=sid, group_id=int(ev.group_id), message=reply)
             break
-        except Exception as e:
+        except Exception:
             pass
 
 
@@ -886,7 +886,7 @@ async def send_notice(new: int, old: int, pcrid: int, notice_type: int):  # noti
                             try:
                                 await bot.send_group_msg(self_id=sid, group_id=int(bind_cache[qid]["gid"]), message=msg)
                                 break
-                            except Exception as e:
+                            except Exception:
                                 pass
                 break
 
