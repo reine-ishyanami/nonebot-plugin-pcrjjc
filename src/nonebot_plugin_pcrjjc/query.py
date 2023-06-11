@@ -49,11 +49,15 @@ account_json_template = [
 ]
 
 
+@driver.on_startup
+async def _():
+    await load_config()
+
+
 @driver.on_bot_connect
 async def _(b: Bot):
     global bot, ac_info, binds_info
     bot = b
-    await load_config()
     for i in ac_info:
         b_client = BSdkClient(i, captcha_verifier)
         pcr_client = PcrClient(b_client)
