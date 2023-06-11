@@ -40,6 +40,7 @@ from nonebot_plugin_apscheduler import scheduler
 
 __plugin_meta__ = PluginMetadata(
     name="pcrjjc",
+    config=Config,
     description="公主连结（国服）排名监测工具",
     usage="发送 竞技场帮助 获取详细使用说明",
     type="application",
