@@ -140,7 +140,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
             gl = [g['group_id'] for g in gl]
             try:
                 await bot.send_group_msg(group_id=gid, message=f"本Bot目前正在为【{len(gl)}】个群服务")
-            except Exception as e:
+            except Exception:
                 logger.info('bot账号{}不在群{}中，将忽略该消息', sid, gid)
 
 
@@ -159,7 +159,6 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
         pcrid = int(group[0])
         if (len(group[0])) != 13:
             await matcher.finish('位数不对，uid是13位的！')
-            return
         else:
             manual_query_list = [pcrid]  # 手动查询的列表
             manual_query_list_name = [None]
@@ -169,7 +168,6 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
             manual_query_list_name = bind_cache[qid]["pcrName"]
         else:
             await matcher.finish('木有找到绑定信息，查询时不能省略13位uid！')
-            return
     for i in range(len(manual_query_list)):
         query_cache[event.user_id] = []
         pcrid = manual_query_list[i]
@@ -332,14 +330,12 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple =
     pcrid = int(group[0])
     if len(group[0]) != 13:
         await matcher.finish('位数不对，uid是13位的！')
-        return
     else:
         try:  # 是否指定昵称
             if len(group[1]) <= 12:
                 nickname = group[1]
             else:
                 await matcher.finish('昵称不能超过12个字，换个短一点的昵称吧~')
-                return
         except TypeError:
             nickname = ''
     await queue.put((4, (
@@ -355,13 +351,11 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
         pcrid_id = int(group[0])
     else:
         await matcher.finish('输入格式不对！“删除竞技场绑定+【序号】”（序号不可省略）')
-        return
     async with lck:
         if qid in bind_cache:
             pcrid_num = len(bind_cache[qid]["pcrid"])
             if pcrid_num == 1:
                 await matcher.finish('您只有一个绑定的uid，请使用“清空竞技场绑定”删除')
-                return
             if 0 < pcrid_id <= pcrid_num:
                 pcrid_id -= 1
                 result = f'您已成功删除：【{pcrid_id + 1:02}】{bind_cache[qid]["pcrName"][pcrid_id]}（{bind_cache[qid]["pcrid"][pcrid_id]}）'
@@ -387,7 +381,6 @@ async def _(event: GroupMessageEvent, matcher: Matcher):
         else:
             reply = '您还没有绑定竞技场！'
             await matcher.finish(reply)
-            return
         save_binds()
     await matcher.finish(reply)
 
@@ -400,7 +393,6 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
     if qid not in bind_cache:
         reply = '您还没有绑定竞技场！'
         await matcher.finish(reply)
-        return
     try:
         pcrid_id = int(group[0])
     except TypeError:
@@ -409,17 +401,14 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
         name = group[1]
     else:
         await matcher.finish('昵称不能超过12个字，换个短一点的昵称吧~')
-        return
     pcrid_num = len(bind_cache[qid]["pcrid"])
     if pcrid_id is None:
         if pcrid_num == 1:
             pcrid_id = 1
         else:
             await matcher.finish('您绑定了多个uid，更改昵称时需要加上序号。')
-            return
     if pcrid_id == 0 or pcrid_id > pcrid_num:
         await matcher.finish('序号超出范围，请检查您绑定的竞技场列表')
-        return
     async with lck:
         pcrid_id -= 1
         bind_cache[qid]["pcrName"][pcrid_id] = name
@@ -453,7 +442,6 @@ async def _(bot: Bot, event: PrivateMessageEvent, matcher: Matcher):
             pri_user += 1
     if pri_user >= MAX_PRI:
         await matcher.finish('私聊推送用户已达上限！')
-        return
     if len(friend_list):
         await renew_friend_list()
     if qid not in friend_list:
@@ -485,7 +473,6 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
                 else:
                     reply = '您绑定了多个uid，更改设置时需要加上序号。'
                     await matcher.finish(reply)
-                    return
             if 0 <= pcrid_id <= pcrid_num:  # 设置成功！
                 if pcrid_id == 0:
                     for i in range(pcrid_num):
@@ -536,7 +523,6 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
                 else:
                     reply = '您绑定了多个uid，更改设置时需要加上序号。'
                     await matcher.finish(reply)
-                    return
             if 0 <= pcrid_id <= pcrid_num:  # 设置成功！
                 change_quick_set = int(change)
                 if pcrid_id == 0:
@@ -562,12 +548,10 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple =
         turn_on = True if group[0] == '开启' else False
     except:
         await matcher.finish('出错了，请联系管理员！')
-        return
     async with lck:
         if qid in bind_cache:
             if bind_cache[qid]["notice_on"] == turn_on:
                 await matcher.finish(f'您的竞技场推送，已经是{group[0]}状态，不要重复{group[0]}！')
-                return
             else:
                 if turn_on:
                     if len(friend_list):
@@ -575,21 +559,18 @@ async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple =
                     if bind_cache[qid]["private"]:
                         if qid not in friend_list:
                             await matcher.finish('开启私聊推送需要先加好友！你也可以发送“在本群推送”，改为群聊推送。')
-                            return
                         else:
                             for i in bind_cache:
                                 if bind_cache[i]['notice_on'] and bind_cache[i]['private']:
                                     pri_user += 1
                             if pri_user >= MAX_PRI:
                                 await matcher.finish('私聊推送用户已达上限！')
-                                return
                             reply_adm = f'''{qid}开启了私聊jjc推送！'''
                             await bot.send_private_msg(user_id=admin, message=reply_adm)
                             await matcher.finish('已通知管理员')
                 bind_cache[qid]["notice_on"] = turn_on
         else:
             await matcher.finish('您还没有绑定竞技场！')
-            return
         save_binds()
     await matcher.finish(f'竞技场推送{group[0]}成功！')
 
@@ -702,7 +683,7 @@ async def query_schedule(data):
     timeStamp = int(time.time())
     try:
         info = data["res"]['user_info']
-    except:
+    except KeyError:
         return
     pcrid = data["uid"]
     # logger.info(f'渠query for {pcrid}') #debug
