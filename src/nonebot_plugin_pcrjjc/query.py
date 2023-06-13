@@ -58,13 +58,17 @@ async def _():
 async def _(b: Bot):
     global bot, ac_info, binds_info
     bot = b
-    for i in ac_info:
-        b_client = BSdkClient(i, captcha_verifier)
-        pcr_client = PcrClient(b_client)
-        loop = asyncio.get_event_loop()
-        loop.create_task(query(pcr_client))
-        if binds_info == {} or binds_info["arena_bind"] == {}:
-            loop.create_task(first_login(pcr_client))
+    try:
+        while i := ac_info.__iter__().__next__():
+            b_client = BSdkClient(i, captcha_verifier)
+            pcr_client = PcrClient(b_client)
+            loop = asyncio.get_event_loop()
+            loop.create_task(query(pcr_client))
+            if binds_info == {} or binds_info["arena_bind"] == {}:
+                loop.create_task(first_login(pcr_client))
+            ac_info.remove(i)  # 遍历删除集合元素，防止有第二个bot对象连接时触发登录事件
+    except StopIteration:
+        pass
 
 
 async def first_login(pcr_client):
