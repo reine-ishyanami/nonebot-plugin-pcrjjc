@@ -124,26 +124,16 @@ async def validate(group: tuple = RegexGroup()):
         pass
 
 
-async def captcha_verifier(*args):
-    global otto
-    if len(args) == 0:
-        return otto
-    global captcha_cnt
-    if len(args) == 1 and type(args[0]) == int:
-        captcha_cnt = args[0]
-        return captcha_cnt
-
-    global ac_first, validating
-    global validate, captcha_lck
+async def captcha_verifier(gt: str, challenge: str, userid: str):
+    global otto, captcha_cnt, ac_first, validating, validate, captcha_lck
     if not ac_first:
         await captcha_lck.acquire()
         ac_first = True
 
     validating = True
+
+    # 非自动过码
     if not otto:
-        gt = args[0]
-        challenge = args[1]
-        userid = args[2]
         online_url_head = f"https://help.tencentbot.top/geetest_/?"
         url = f"captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
         await bot.send_private_msg(
@@ -156,42 +146,46 @@ async def captcha_verifier(*args):
         )
         await captcha_lck.acquire()
         validating = False
-        return validate
+        return challenge, gt, validate
 
     while captcha_cnt < 5:
         captcha_cnt += 1
         try:
             logger.info('测试新版自动过码中，当前尝试第{}次。', captcha_cnt)
-
-            await asyncio.sleep(1)
-            uuid = loads(await (await get(url="https://pcrd.tencentbot.top/geetest")).content)["uuid"]
-            logger.info('uuid={}', uuid)
+            url = f"https://pcrd.tencentbot.top/geetest_renew?captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
+            header = {"Content-Type": "application/json", "User-Agent": "pcrjjc/0.2.0"}
+            res = await (await get(url=url, headers=header)).content
+            res = loads(res)
+            uuid = res["uuid"]
+            msg = [f"uuid={uuid}"]
 
             ccnt = 0
-            while ccnt < 3:
+            while ccnt < 10:
                 ccnt += 1
                 await asyncio.sleep(5)
-                res = await (await get(url=f"https://pcrd.tencentbot.top/check/{uuid}")).content
+                res = await (await get(url=f"https://pcrd.tencentbot.top/check/{uuid}", headers=header)).content
                 res = loads(res)
                 if "queue_num" in res:
                     nu = res["queue_num"]
-                    logger.info("queue_num={}", nu)
-                    tim = min(int(nu), 3) * 5
-                    logger.info("sleep={}", tim)
-                    await asyncio.sleep(tim)
+                    msg.append(f"queue_num={nu}")
+                    tim = min(int(nu), 3) * 10
+                    msg.append(f"sleep={tim}")
+                    logger.info("pcrjjc2:{}", msg)
+                    msg = []
                 else:
                     info = res["info"]
                     if info in ["fail", "url invalid"]:
                         break
                     elif info == "in running":
                         await asyncio.sleep(5)
-                    else:
+                    elif 'validate' in info:
                         logger.info('info={}', info)
                         validating = False
-                        return info
+                        return info["challenge"], info["gt_user_id"], info["validate"]
+                if ccnt > 10:
+                    raise Exception("Captcha Failed")
         except:
             pass
-
     if captcha_cnt >= 5:
         otto = False
         await bot.send_private_msg(user_id=admin,

@@ -86,26 +86,11 @@ async def captcha():
 async def login(bili_account, bili_pwd, captcha_verifier):
     logger.info('logging in with acc = {}, pwd = {}', bili_account, bili_pwd)
     login_sta = await login1(bili_account, bili_pwd)
-    if "access_key" in login_sta:
-        return login_sta
+    # if "access_key" in login_sta:
+    #     return login_sta
 
-    otto = False
-    try:
-        otto = await captcha_verifier()
-    except:  # 兼容原版手动过码
-        pass
-    if otto:
-        cap = await captcha_verifier(True, True)
-        if cap == "manual":
-            otto = False
-        else:
-            login_sta = await login2(bili_account, bili_pwd, cap["challenge"], cap['gt_user_id'], cap['validate'])
-            if "access_key" in login_sta:
-                await captcha_verifier(0)
-            return login_sta
-
-    if not otto:
+    if login_sta['code'] == 200_000:
         cap = await captcha()
-        captcha_done = await captcha_verifier(cap['gt'], cap['challenge'], cap['gt_user_id'])
-        login_sta = await login2(bili_account, bili_pwd, cap["challenge"], cap['gt_user_id'], captcha_done)
+        challenge, gt_user_id, captcha_done = await captcha_verifier(cap['gt'], cap['challenge'], cap['gt_user_id'])
+        login_sta = await login2(bili_account, bili_pwd, challenge, gt_user_id, captcha_done)
         return login_sta
