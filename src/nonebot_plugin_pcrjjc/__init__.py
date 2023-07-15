@@ -75,11 +75,12 @@ jjc/pjjc当天排名上升次数、最后登录时间。
 3）开启/关闭竞技场推送（不会删除绑定）
 4）清空竞技场绑定
 5）竞技场查询[uid]（uid可省略）
-6）竞技场订阅状态
-7）竞技场修改昵称 [绑定的序号] [新昵称] 
-8）竞技场设置[开启/关闭][订阅内容][绑定的序号]
-9）竞技场/击剑记录[绑定的序号]（序号可省略）
-10）竞技场设置11110[绑定的序号]
+6）竞技场查询#[绑定的序号]
+7）竞技场订阅状态
+8）竞技场修改昵称 [绑定的序号] [新昵称] 
+9）竞技场设置[开启/关闭][订阅内容][绑定的序号]
+10）竞技场/击剑记录[绑定的序号]（序号可省略）
+11）竞技场设置11110[绑定的序号]
 #0表示关闭，1表示开启
 #5个数字依次代表jjc、pjjc、排名上升、at、上线提醒
 #例如：“竞技场设置10111 2” “竞技场设置11110 0”
@@ -87,7 +88,7 @@ jjc/pjjc当天排名上升次数、最后登录时间。
 0表示关闭，1表示{NOTICE_CD_MIN}分钟cd，仅在2点半~3点报，
 2表示{NOTICE_CD_MIN}分钟cd，全天报；3表示1分钟cd全天报。
 每天5点会把上线提醒等级3改成2，有需要的可以再次手动开启。
-11）在本群推送（限群聊发送，无需好友）
+12）在本群推送（限群聊发送，无需好友）
 '''
 sv_help_adm = '''------------------------------------------------
 管理员帮助：
@@ -134,14 +135,14 @@ async def _(event: MessageEvent, matcher: Matcher):
 async def _(bot: Bot, event: GroupMessageEvent):
     global bind_cache, lck
     gid = event.group_id
+    sid = bot.self_id
     async with lck:
-        for sid in get_bots():
-            gl = await bot.get_group_list()
-            gl = [g['group_id'] for g in gl]
-            try:
-                await bot.send_group_msg(group_id=gid, message=f"本Bot目前正在为【{len(gl)}】个群服务")
-            except Exception:
-                logger.info('bot账号{}不在群{}中，将忽略该消息', sid, gid)
+        gl = await bot.get_group_list()
+        gl = [g['group_id'] for g in gl]
+        try:
+            await bot.send_group_msg(group_id=gid, message=f"本Bot目前正在为【{len(gl)}】个群服务")
+        except Exception:
+            logger.info('bot账号{}不在群{}中，将忽略该消息', sid, gid)
 
 
 @on_fullmatch(msg='查询竞技场订阅数').handle()
@@ -168,11 +169,34 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
             manual_query_list_name = bind_cache[qid]["pcrName"]
         else:
             await matcher.finish('木有找到绑定信息，查询时不能省略13位uid！')
+    logger.debug("manual_query_list: {}", manual_query_list)
     for i in range(len(manual_query_list)):
         query_cache[event.user_id] = []
         pcrid = manual_query_list[i]
         await queue.put((3, (
             jjc_query, pcrid, {"bot": bot, "event": event, "list": manual_query_list_name, "index": i, "uid": pcrid})))
+        
+
+@on_regex(pattern=r'^竞技场查询\# ?(\d+)$').handle()
+async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = RegexGroup()):
+    global bind_cache, lck
+    qid = str(event.user_id)
+    lid = int(group[0])
+    if qid in bind_cache:
+        qid_pcrid_list = bind_cache[qid]["pcrid"]
+        if 0 < lid <= len(qid_pcrid_list):
+            manual_query_list = [bind_cache[qid]["pcrid"][lid-1]]
+            manual_query_list_name = [bind_cache[qid]["pcrName"][lid-1]]
+        else:
+            await matcher.finish('序号超出范围，请检查您绑定的竞技场列表')
+    else:
+        await matcher.finish('木有找到绑定信息，查询时不能省略13位uid！')
+    logger.debug("manual_query_list: {}", manual_query_list)
+    for i in range(len(manual_query_list)):
+        query_cache[event.user_id] = []
+        pcrid = manual_query_list[i]
+        await queue.put((3, (
+            jjc_query, pcrid, {"bot": bot, "event": event, "list": manual_query_list_name, "index": i, "uid": pcrid, "only": lid - 1})))
 
 
 @on_fullmatch(msg='竞技场订阅状态').handle()
@@ -544,10 +568,7 @@ async def _(event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGrou
 async def _(bot: Bot, event: GroupMessageEvent, matcher: Matcher, group: tuple = RegexGroup()):
     global bind_cache, lck, friend_list, pri_user, admin
     qid = str(event.user_id)
-    try:
-        turn_on = True if group[0] == '开启' else False
-    except:
-        await matcher.finish('出错了，请联系管理员！')
+    turn_on = True if group[0] == '开启' else False
     async with lck:
         if qid in bind_cache:
             if bind_cache[qid]["notice_on"] == turn_on:
@@ -725,6 +746,7 @@ async def jjc_query(data):
         extra = ''
         if pcrid in cache:
             extra = f'''上升: {cache[pcrid][3]}次 / {cache[pcrid][4]}次\n'''
+        i = i if data.get("only") is None else data.get("only")  # 如果是查询单个，修改其序号
         query = f'【{i + 1:02}】{res["user_name"]}\n{res["arena_rank"]}({res["arena_group"]}场) / {res["grand_arena_rank"]}({res["grand_arena_group"]}场)\n{extra}最近上号{last_login_hour}：{last_login_min}\n\n'
         async with lck:
             query_list.append(query)
@@ -736,8 +758,8 @@ async def jjc_query(data):
                         await bot.send_group_msg(self_id=sid, group_id=int(ev.group_id),
                                                  message=MessageSegment.image(pic))
                         break
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(e)
     except KeyError:
         await bot.send_group_msg(group_id=int(ev.group_id), message=f'找不到这个uid，大概率是你输错了！')
 
@@ -804,8 +826,8 @@ async def member_add_sub(data):
         try:
             await bot.send_group_msg(self_id=sid, group_id=int(ev.group_id), message=reply)
             break
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(e)
 
 
 async def send_notice(new: int, old: int, pcrid: int, notice_type: int):  # noticeType：1:jjc排名变动   2:pjjc排名变动  3:登录时间刷新
@@ -867,8 +889,8 @@ async def send_notice(new: int, old: int, pcrid: int, notice_type: int):  # noti
                             try:
                                 await bot.send_group_msg(self_id=sid, group_id=int(bind_cache[qid]["gid"]), message=msg)
                                 break
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                logger.debug(e)
                 break
 
 

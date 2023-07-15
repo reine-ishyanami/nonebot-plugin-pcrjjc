@@ -1,6 +1,7 @@
 import asyncio
 import os.path
 import traceback
+import types
 from asyncio import Lock
 from json import load, loads, dump
 from os.path import join
@@ -22,6 +23,7 @@ bot: Bot | None = None
 captcha_lck = Lock()
 queue = asyncio.PriorityQueue()
 otto = config.otto
+pcrjjc_group = config.pcrjjc_group
 ordd = 'x'
 validate = None
 validating = False
@@ -57,9 +59,10 @@ async def _():
 @driver.on_bot_connect
 async def _(b: Bot):
     global bot, ac_info, binds_info
+    b.send_admin_msg_of_pcrjjc = types.MethodType(send_admin_msg_of_pcrjjc, b)
     bot = b
     try:
-        while i := ac_info.__iter__().__next__():
+        while i := next(iter(ac_info)):
             b_client = BSdkClient(i, captcha_verifier)
             pcr_client = PcrClient(b_client)
             loop = asyncio.get_event_loop()
@@ -69,6 +72,13 @@ async def _(b: Bot):
             ac_info.remove(i)  # 遍历删除集合元素，防止有第二个bot对象连接时触发登录事件
     except StopIteration:
         pass
+
+
+async def send_admin_msg_of_pcrjjc(self, user_id: int, group_id: str, message: str):
+    if group_id is None:
+        await self.send_private_msg(user_id=user_id, message=message)
+    else:
+        await self.send_group_msg(group_id=int(group_id), message=message)
 
 
 async def first_login(pcr_client):
@@ -98,6 +108,7 @@ async def load_config():
         pass
 
 
+# noinspection PyUnresolvedReferences
 @driver.on_shutdown
 async def _():
     # 清空队列中的任务
@@ -114,10 +125,12 @@ async def validate(group: tuple = RegexGroup()):
     validate = group[0]
     if validate == "manual":
         otto = False
-        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to manual')
+        message = f'thread{ordd}: Changed to manual'
+        await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message)
     elif validate == "auto":
         otto = True
-        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to auto')
+        message = f'thread{ordd}: Changed to auto'
+        await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message)
     try:
         captcha_lck.release()
     except:
@@ -136,14 +149,12 @@ async def captcha_verifier(gt: str, challenge: str, userid: str):
     if not otto:
         online_url_head = f"https://help.tencentbot.top/geetest_/?"
         url = f"captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
-        await bot.send_private_msg(
-            user_id=admin,
-            message=f'pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证'
-                    f'\n示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码'
-                    f'\n验证链接头：{online_url_head}'
-                    f'\n链接：{url}'
-                    f'\n为避免tx网页安全验证使验证码过期，请手动拼接链接头和链接'
-        )
+        message = f'pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证'
+        f'\n示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码'
+        f'\n验证链接头：{online_url_head}'
+        f'\n链接：{url}'
+        f'\n为避免tx网页安全验证使验证码过期，请手动拼接链接头和链接'
+        await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message)
         await captcha_lck.acquire()
         validating = False
         return challenge, gt, validate
@@ -188,9 +199,10 @@ async def captcha_verifier(gt: str, challenge: str, userid: str):
             pass
     if captcha_cnt >= 5:
         otto = False
-        await bot.send_private_msg(user_id=admin,
-                                   message=f'thread{ordd}: 自动过码多次尝试失败，可能为服务器错误，自动切换为手动。\n确实服务器无误后，可发送 validate{ordd} auto重新触发自动过码。')
-        await bot.send_private_msg(user_id=admin, message=f'thread{ordd}: Changed to manual')
+        message1 = f'thread{ordd}: 自动过码多次尝试失败，可能为服务器错误，自动切换为手动。\n确实服务器无误后，可发送 validate{ordd} auto重新触发自动过码。'
+        message2 = f'thread{ordd}: Changed to manual'
+        await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message1)
+        await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message2)
         validating = False
         return "manual"
 

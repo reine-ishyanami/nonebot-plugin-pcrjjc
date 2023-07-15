@@ -8,6 +8,7 @@ class Config(BaseModel, extra=Extra.ignore):
     apscheduler_log_level: int = 30
     data_path: str = join("data", "pcrjjc")  # 数据存储目录
     superusers: list[str]  # 超级用户列表，建议只填一个，填多个可能导致后续用户指令失效
+    pcrjjc_group: str = None  # 当私聊不可用时，使用指定群聊推送要私聊的消息
     otto: bool = True  # 是否自动过验证码，因自动过码失效，改为手动过码
     version: str = "6.2.0"  # 游戏版本号
     max_pri: int = 0  # 最大私聊人数
