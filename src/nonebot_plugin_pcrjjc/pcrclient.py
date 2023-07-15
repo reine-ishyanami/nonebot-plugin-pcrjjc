@@ -3,7 +3,7 @@ from base64 import b64encode, b64decode
 from datetime import datetime
 from hashlib import md5
 from json import loads
-from os.path import dirname, join, exists
+from os.path import join, exists
 from pathlib import Path
 from random import randint
 from re import search
@@ -20,7 +20,7 @@ from .config import Config
 driver = get_driver()
 config = Config.parse_obj(driver.config)
 
-api_root = 'https://l3-prod-all-gs-gzlj.bilibiligame.net'
+api_root = 'https://le1-prod-all-gs-gzlj.bilibiligame.net'
 debugging = 1
 
 data_path = config.data_path
