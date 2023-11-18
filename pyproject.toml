@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-pcrjjc"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     {name="reine-ishyanami", email="2402979195@qq.com"}
 ]
@@ -9,15 +9,15 @@ readme = "README.md"
 license = { text = "AGPL-3" }
 requires-python = ">=3.10, <4.0"
 dependencies = [
-    "msgpack~=1.0.5",
-    "requests~=2.30.0",
-    "Pillow~=9.5.0",
-    "pydantic~=1.10.9",
-    "python-dateutil~=2.8.2",
-    "pycryptodome~=3.18.0",
-    "nonebot2~=2.0.0",
-    "nonebot-adapter-onebot~=2.2.3",
-    "nonebot-plugin-apscheduler~=0.3.0"
+    "msgpack>=1.0.5",
+    "requests>=2.30.0",
+    "Pillow>=9.5.0",
+    "pydantic>=1.10.9",
+    "python-dateutil>=2.8.2",
+    "pycryptodome>=3.18.0",
+    "nonebot2>=2.0.0",
+    "nonebot-adapter-onebot>=2.2.3",
+    "nonebot-plugin-apscheduler>=0.3.0"
 ]
 classifiers = [
     "Framework :: Pydantic",

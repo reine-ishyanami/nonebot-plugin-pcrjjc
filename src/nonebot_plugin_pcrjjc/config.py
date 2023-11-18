@@ -3,6 +3,20 @@ from os.path import join
 from pydantic import BaseModel, Extra
 
 
+class AccountInfo(BaseModel):
+    account: str = ""
+    password: str = ""
+    platform: int = 2
+    channel: int = 1
+
+    def __init__(self, account, password, platform, channel, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.account = account
+        self.password = password
+        self.platform = platform
+        self.channel = channel
+
+
 class Config(BaseModel, extra=Extra.ignore):
     """Plugin Config Here"""
     apscheduler_log_level: int = 30
@@ -16,3 +30,4 @@ class Config(BaseModel, extra=Extra.ignore):
     max_history: int = 50  # 每个QQ号保存的最多击剑记录
     notice_cd_min: int = 10  # 上线推送频率
     refresh_second: int = 3  # 刷新频率，可按自身服务器性能输入其他数值，可支持整数、小数
+    pcrjjc_accounts: list[AccountInfo] = []  # 登录账号

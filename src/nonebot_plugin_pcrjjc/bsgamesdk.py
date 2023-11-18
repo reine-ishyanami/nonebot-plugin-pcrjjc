@@ -86,8 +86,7 @@ async def captcha():
 async def login(bili_account, bili_pwd, captcha_verifier):
     logger.info('logging in with acc = {}, pwd = {}', bili_account, bili_pwd)
     login_sta = await login1(bili_account, bili_pwd)
-    # if "access_key" in login_sta:
-    #     return login_sta
+
 
     if login_sta['code'] == 0:
         cap = await captcha()

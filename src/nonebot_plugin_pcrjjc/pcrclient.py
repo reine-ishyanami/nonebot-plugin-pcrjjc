@@ -73,10 +73,10 @@ class BSdkClient:
     '''
 
     def __init__(self, account_info, captcha_verifier):
-        self.account = account_info['account']
-        self.pwd = account_info['password']
-        self.platform = account_info['platform']
-        self.channel = account_info['channel']
+        self.account = account_info.account
+        self.pwd = account_info.password
+        self.platform = account_info.platform
+        self.channel = account_info.channel
         self.captcha_verifier = captcha_verifier
 
     async def login(self):
