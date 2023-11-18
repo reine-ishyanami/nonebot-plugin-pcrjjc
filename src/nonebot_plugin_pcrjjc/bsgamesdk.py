@@ -89,7 +89,7 @@ async def login(bili_account, bili_pwd, captcha_verifier):
     # if "access_key" in login_sta:
     #     return login_sta
 
-    if login_sta['code'] == 200_000:
+    if login_sta['code'] == 0:
         cap = await captcha()
         challenge, gt_user_id, captcha_done = await captcha_verifier(cap['gt'], cap['challenge'], cap['gt_user_id'])
         login_sta = await login2(bili_account, bili_pwd, challenge, gt_user_id, captcha_done)
