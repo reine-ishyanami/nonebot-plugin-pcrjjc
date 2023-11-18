@@ -1,9 +1,8 @@
 import asyncio
-import os.path
 import traceback
 import types
 from asyncio import Lock
-from json import load, loads, dump
+from json import load, loads
 from os.path import join
 from pathlib import Path
 
@@ -13,7 +12,7 @@ from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
 
 from .aiorequests import get
-from .config import Config
+from .config import Config, AccountInfo
 from .pcrclient import PcrClient, ApiException, BSdkClient
 
 driver = get_driver()
@@ -33,22 +32,10 @@ captcha_cnt = 0
 admin = int(config.superusers[0]) if len(config.superusers) > 0 else 0
 data_path = config.data_path
 path = join(str(Path()), data_path)
-ac_info = []
+ac_info: list[AccountInfo] = []
+if config.pcrjjc_accounts:
+    ac_info = config.pcrjjc_accounts
 binds_info = {}
-account_json_template = [
-    {
-        "account": "account1",
-        "password": "password",
-        "platform": 2,
-        "channel": 1
-    },
-    {
-        "account": "account2",
-        "password": "password",
-        "platform": 2,
-        "channel": 1
-    }
-]
 
 
 @driver.on_startup
@@ -87,20 +74,17 @@ async def first_login(pcr_client):
 
 
 async def load_config():
-    global ac_info, binds_info, path, account_json_template
-    account_json_name = "account.json"
+    global ac_info, binds_info, path
+    if not ac_info:
+        account_json_name = "account.json"
+        try:
+            with open(join(path, account_json_name)) as fp:
+                ac_info_arr = load(fp)
+                ac_info = [AccountInfo(acc['account'], acc['password'], acc['platform'], acc['channel']) for acc in
+                           ac_info_arr]
+        except FileNotFoundError:
+            logger.error("请在配置文件中配置PCRJJC_ACCOUNTS字段，具体格式见自述文件")
     binds_json_name = "binds.json"
-    try:
-        with open(join(path, account_json_name)) as fp:
-            ac_info = load(fp)
-    except FileNotFoundError:
-        if not os.path.exists(path):
-            os.makedirs(path)
-        with open(join(path, account_json_name), 'w') as fp:
-            dump(account_json_template, fp, indent=4)
-        logger.info("未发现路径下存在{}文件，已自动生成", account_json_name)
-        logger.info("路径为:{}", path)
-        logger.info("请修改account和password字段，可添加多个")
     try:
         with open(join(path, binds_json_name)) as fp:
             binds_info = load(fp)

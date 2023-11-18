@@ -59,7 +59,7 @@ NOTICE_CD_MIN = config.notice_cd_min
 REFRESH_SECOND = config.refresh_second
 
 sv_help = f'''\t\t\t\t【竞技场帮助】
-可以添加的订阅：[jjc][pjjc][排名上升][上线提醒]
+可以添加的订阅：[jjc][pjjc][排名上升][at][上线提醒]
 #排名上升提醒对jjc和pjjc同时生效
 #每个QQ号至多添加{MAX_PCRID}个uid的订阅
 #默认开启jjc、pjjc、at，关闭排名上升、上线提醒
