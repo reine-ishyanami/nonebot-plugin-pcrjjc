@@ -48,7 +48,6 @@ __plugin_meta__ = PluginMetadata(
     supported_adapters={"~onebot.v11"}
 )
 
-
 driver = get_driver()
 config = Config.parse_obj(driver.config)
 
@@ -175,7 +174,7 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
         pcrid = manual_query_list[i]
         await queue.put((3, (
             jjc_query, pcrid, {"bot": bot, "event": event, "list": manual_query_list_name, "index": i, "uid": pcrid})))
-        
+
 
 @on_regex(pattern=r'^竞技场查询\# ?(\d+)$').handle()
 async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = RegexGroup()):
@@ -185,8 +184,8 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
     if qid in bind_cache:
         qid_pcrid_list = bind_cache[qid]["pcrid"]
         if 0 < lid <= len(qid_pcrid_list):
-            manual_query_list = [bind_cache[qid]["pcrid"][lid-1]]
-            manual_query_list_name = [bind_cache[qid]["pcrName"][lid-1]]
+            manual_query_list = [bind_cache[qid]["pcrid"][lid - 1]]
+            manual_query_list_name = [bind_cache[qid]["pcrName"][lid - 1]]
         else:
             await matcher.finish('序号超出范围，请检查您绑定的竞技场列表')
     else:
@@ -196,7 +195,8 @@ async def _(bot: Bot, event: MessageEvent, matcher: Matcher, group: tuple = Rege
         query_cache[event.user_id] = []
         pcrid = manual_query_list[i]
         await queue.put((3, (
-            jjc_query, pcrid, {"bot": bot, "event": event, "list": manual_query_list_name, "index": i, "uid": pcrid, "only": lid - 1})))
+            jjc_query, pcrid,
+            {"bot": bot, "event": event, "list": manual_query_list_name, "index": i, "uid": pcrid, "only": lid - 1})))
 
 
 @on_fullmatch(msg='竞技场订阅状态').handle()
