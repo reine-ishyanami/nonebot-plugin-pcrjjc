@@ -243,8 +243,6 @@ class PcrClient:
         except:
             pass
 
-        await self.callapi('/check/check_agreement', {})
-
         load_index = await self.callapi('/load/index', {'carrier': 'OPPO'})
         home_index = await self.callapi('/home/index',
                                         {'message_id': 1, 'tips_id_list': [], 'is_first': 1, 'gold_history': 0})
