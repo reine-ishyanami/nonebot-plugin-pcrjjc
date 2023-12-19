@@ -3,7 +3,8 @@ import traceback
 import types
 from asyncio import Lock
 from json import load, loads
-from os.path import join
+from os.path import join, exists
+from os import makedirs
 from pathlib import Path
 
 from nonebot import get_driver, logger, on_regex
@@ -40,6 +41,9 @@ binds_info = {}
 
 @driver.on_startup
 async def _():
+    # 判断文件夹是否存在，不存在则创建
+    if not exists(path):
+        makedirs(path)
     await load_config()
 
 
