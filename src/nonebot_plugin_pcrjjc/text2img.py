@@ -1,8 +1,9 @@
 import base64
 import io
-import os
 
 from PIL import Image, ImageDraw, ImageFont
+
+from .query import font_path
 
 LINE_CHAR_COUNT = 30 * 2  # 每行字符数：30个中文字符(=60英文字符)
 LINE_CHAR_COUNT_MAX = 0
@@ -50,8 +51,7 @@ def line_break(line):
 def image_draw(msg):
     global LINE_CHAR_COUNT_MAX
     output_str = line_break(msg)
-    d_font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), 'fonts', 'SourceHanSansCN-Medium.otf'),
-                                CHAR_SIZE)
+    d_font = ImageFont.truetype(font_path, CHAR_SIZE)
     lines = output_str.count('\n')  # 计算行数
     image = Image.new(mode="RGB", size=(LINE_CHAR_COUNT_MAX * CHAR_SIZE // 2 + 84, CHAR_SIZE_h * lines + 84),
                       color=(255, 252, 245))

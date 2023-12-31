@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-pcrjjc"
-version = "0.5.1"
+version = "0.6.0"
 authors = [
     {name="reine-ishyanami", email="2402979195@qq.com"}
 ]
@@ -37,16 +37,9 @@ plugins = ["nonebot_plugin_apscheduler"]
 plugin_dirs = ["src"]
 builtin_plugins = []
 
-[tool.setuptools]
-include-package-data = true
-
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["nonebot_plugin_pcrjjc"]
-
-
-[tool.setuptools.package-data]
-nonebot_plugin_pcrjjc = ["fonts/*.otf"]
 
 [build-system]
 requires = ["setuptools >= 65.6.3"]

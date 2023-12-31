@@ -33,10 +33,13 @@ captcha_cnt = 0
 admin = int(config.superusers[0]) if len(config.superusers) > 0 else 0
 data_path = config.data_path
 path = join(str(Path()), data_path)
+font_path = join(path, 'SourceHanSansCN-Medium.otf')
 ac_info: list[AccountInfo] = []
 if config.pcrjjc_accounts:
     ac_info = config.pcrjjc_accounts
 binds_info = {}
+
+font_download_url = "https://github.com/reine-ishyanami/nonebot-plugin-pcrjjc/releases/download/font/SourceHanSansCN-Medium.otf"
 
 
 @driver.on_startup
@@ -44,6 +47,16 @@ async def _():
     # 判断文件夹是否存在，不存在则创建
     if not exists(path):
         makedirs(path)
+    # 判断字体文件是否存在，不存在则下载
+    if not exists(font_path):
+        logger.info("字体文件不存在，正在从GitHub上拉取下载")
+        try:
+            font_resource = (await get(font_download_url)).content
+            with open(font_path, mode='wb') as f:
+                f.write(await font_resource)
+            logger.info("字体文件下载成功")
+        except:
+            logger.error("下载失败，请手动从GitHub下载，或重启程序以重试")
     await load_config()
 
 
