@@ -9,8 +9,8 @@ class AccountInfo(BaseModel):
     platform: int = 2
     channel: int = 1
 
-    def __init__(self, account, password, platform, channel, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, account, password, platform, channel, **kwargs):
+        super().__init__(**kwargs)
         self.account = account
         self.password = password
         self.platform = platform
@@ -31,3 +31,4 @@ class Config(BaseModel, extra=Extra.ignore):
     notice_cd_min: int = 10  # 上线推送频率
     refresh_second: int = 3  # 刷新频率，可按自身服务器性能输入其他数值，可支持整数、小数
     pcrjjc_accounts: list[AccountInfo] = []  # 登录账号
+    font_download_url: str = "https://github.com/reine-ishyanami/nonebot-plugin-pcrjjc/releases/download/font/SourceHanSansCN-Medium.otf"  # 默认字体下载地址

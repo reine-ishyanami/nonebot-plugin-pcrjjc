@@ -39,7 +39,7 @@ if config.pcrjjc_accounts:
     ac_info = config.pcrjjc_accounts
 binds_info = {}
 
-font_download_url = "https://github.com/reine-ishyanami/nonebot-plugin-pcrjjc/releases/download/font/SourceHanSansCN-Medium.otf"
+font_download_url = config.font_download_url
 
 
 @driver.on_startup
@@ -56,7 +56,7 @@ async def _():
                 f.write(await font_resource)
             logger.info("字体文件下载成功")
         except:
-            logger.error("下载失败，请手动从GitHub下载，或重启程序以重试")
+            logger.error(f"下载失败，请手动从GitHub下载，放置于{path}下，或重启程序以重试")
     await load_config()
 
 
