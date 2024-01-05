@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-pcrjjc"
-version = "0.6.1"
+version = "0.6.2"
 authors = [
     {name="reine-ishyanami", email="2402979195@qq.com"}
 ]

@@ -150,11 +150,11 @@ async def captcha_verifier(gt: str, challenge: str, userid: str):
     if not otto:
         online_url_head = f"https://help.tencentbot.top/geetest_/?"
         url = f"captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
-        message = f'pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证'
-        f'\n示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码'
-        f'\n验证链接头：{online_url_head}'
-        f'\n链接：{url}'
-        f'\n为避免tx网页安全验证使验证码过期，请手动拼接链接头和链接'
+        message = f'''pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证
+        示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码
+        验证链接头：{online_url_head}
+        链接：{url}
+        为避免tx网页安全验证使验证码过期，请手动拼接链接头和链接'''
         await bot.send_admin_msg_of_pcrjjc(user_id=admin, group_id=pcrjjc_group, message=message)
         await captcha_lck.acquire()
         validating = False
