@@ -30,8 +30,7 @@ from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 
 from .config import Config
-from .pcrclient import ApiException
-from .query import queue, path
+from .query import queue, path, config
 from .text2img import image_draw
 
 require("nonebot_plugin_apscheduler")
@@ -49,7 +48,6 @@ __plugin_meta__ = PluginMetadata(
 )
 
 driver = get_driver()
-config = Config.parse_obj(driver.config)
 
 MAX_PRI = config.max_pri
 MAX_PCRID = config.max_pcrid

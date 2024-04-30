@@ -57,15 +57,11 @@ plugins = ["nonebot_plugin_pcrjjc"]
 PCRJJC_ACCOUNTS='[
     {
      "account": "account1",
-     "password": "password",
-     "platform": 2,
-     "channel": 1
+     "password": "password"
     },
     {
      "account": "account2",
-     "password": "password",
-     "platform": 2,
-     "channel": 1
+     "password": "password"
     }
 ]'
 ```

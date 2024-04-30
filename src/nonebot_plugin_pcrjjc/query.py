@@ -7,7 +7,7 @@ from os.path import join, exists
 from os import makedirs
 from pathlib import Path
 
-from nonebot import get_driver, logger, on_regex
+from nonebot import get_driver, logger, on_regex, get_plugin_config
 from nonebot.adapters.onebot.v11 import Bot
 from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
@@ -17,7 +17,7 @@ from .config import Config, AccountInfo
 from .pcrclient import PcrClient, ApiException, BSdkClient
 
 driver = get_driver()
-config = Config.parse_obj(driver.config)
+config = get_plugin_config(Config)
 
 bot: Bot | None = None
 captcha_lck = Lock()
@@ -93,14 +93,7 @@ async def first_login(pcr_client):
 async def load_config():
     global ac_info, binds_info, path
     if not ac_info:
-        account_json_name = "account.json"
-        try:
-            with open(join(path, account_json_name)) as fp:
-                ac_info_arr = load(fp)
-                ac_info = [AccountInfo(acc['account'], acc['password'], acc['platform'], acc['channel']) for acc in
-                           ac_info_arr]
-        except FileNotFoundError:
-            logger.error("请在配置文件中配置PCRJJC_ACCOUNTS字段，具体格式见自述文件")
+        logger.error("请在配置文件中配置PCRJJC_ACCOUNTS字段，具体格式见自述文件")
     binds_json_name = "binds.json"
     try:
         with open(join(path, binds_json_name)) as fp:
