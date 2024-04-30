@@ -11,14 +11,13 @@ from re import search
 from Crypto.Cipher import AES
 from dateutil.parser import parse
 from msgpack import packb, unpackb
-from nonebot import logger, get_driver, get_plugin_config
+from nonebot import logger, get_driver
 
 from .aiorequests import post
 from .bsgamesdk import login
-from .config import Config
+from .config import config
 
 driver = get_driver()
-config = get_plugin_config(Config)
 
 api_root = "https://le1-prod-all-gs-gzlj.bilibiligame.net"
 debugging = 1

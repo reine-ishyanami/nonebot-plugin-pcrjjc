@@ -7,17 +7,16 @@ from os.path import join, exists
 from os import makedirs
 from pathlib import Path
 
-from nonebot import get_driver, logger, on_regex, get_plugin_config
+from nonebot import get_driver, logger, on_regex
 from nonebot.adapters.onebot.v11 import Bot
 from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
 
 from .aiorequests import get
-from .config import Config, AccountInfo
+from .config import config, AccountInfo
 from .pcrclient import PcrClient, ApiException, BSdkClient
 
 driver = get_driver()
-config = get_plugin_config(Config)
 
 bot: Bot | None = None
 captcha_lck = Lock()
@@ -34,9 +33,7 @@ admin = int(config.superusers[0]) if len(config.superusers) > 0 else 0
 data_path = config.data_path
 path = join(str(Path()), data_path)
 font_path = join(path, 'SourceHanSansCN-Medium.otf')
-ac_info: list[AccountInfo] = []
-if config.pcrjjc_accounts:
-    ac_info = config.pcrjjc_accounts
+ac_info: list[AccountInfo] = config.pcrjjc_accounts
 binds_info = {}
 
 font_download_url = config.font_download_url
@@ -141,7 +138,7 @@ async def captcha_verifier(gt: str, challenge: str, userid: str):
 
     # 非自动过码
     if not otto:
-        online_url_head = f"https://help.tencentbot.top/geetest_/?"
+        online_url_head = "https://help.tencentbot.top/geetest_/?"
         url = f"captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
         message = f'''pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证
         示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码

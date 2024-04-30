@@ -29,13 +29,13 @@ from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 
-from .config import Config
-from .query import queue, path, config
+from .config import config, Config
+from .query import queue, path
 from .text2img import image_draw
 
 require("nonebot_plugin_apscheduler")
 
-from nonebot_plugin_apscheduler import scheduler
+from nonebot_plugin_apscheduler import scheduler  
 
 __plugin_meta__ = PluginMetadata(
     name="pcrjjc",

@@ -2,6 +2,8 @@ from os.path import join
 
 from pydantic import BaseModel
 
+from nonebot import get_plugin_config
+
 
 class AccountInfo(BaseModel):
     """账号信息"""
@@ -36,3 +38,5 @@ class Config(BaseModel):
     """登录账号"""
     font_download_url: str = "https://github.com/reine-ishyanami/nonebot-plugin-pcrjjc/releases/download/font/SourceHanSansCN-Medium.otf"
     """默认字体下载地址"""
+
+config = get_plugin_config(Config)
