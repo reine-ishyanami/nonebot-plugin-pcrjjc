@@ -233,7 +233,7 @@ class PcrClient:
                 logger.info("server is in maintenance until {}", match)
                 while datetime.now() < end:
                     await sleep(1)
-            except:
+            except Exception:
                 logger.info("server is in maintenance. waiting for 60 secs")
                 await sleep(60)
 
